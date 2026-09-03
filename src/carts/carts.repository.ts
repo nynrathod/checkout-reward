@@ -73,4 +73,12 @@ export class CartsRepository {
       )
       .all(cartId) as CartLineRow[];
   }
+
+  markCheckedOut(cartId: string): number {
+    return this.db.connection
+      .prepare(
+        "UPDATE carts SET status = 'checked_out' WHERE id = ? AND status = 'open'",
+      )
+      .run(cartId).changes;
+  }
 }
