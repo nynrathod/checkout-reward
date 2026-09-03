@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DomainError } from '../common/errors/domain.error.js';
 import { ErrorCodes } from '../common/errors/error-codes.js';
-import type { ProductDto } from './product.dto.js';
+import type { ProductDto } from './dto/product.dto.js';
 import { ProductsRepository } from './products.repository.js';
 
 @Injectable()
