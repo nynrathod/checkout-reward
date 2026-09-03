@@ -10,5 +10,6 @@ import { OrdersService } from './orders.service.js';
   imports: [CartsModule, ProductsModule, CouponsModule],
   controllers: [OrdersController],
   providers: [OrdersRepository, OrdersService],
+  exports: [OrdersService, OrdersRepository],
 })
 export class OrdersModule {}

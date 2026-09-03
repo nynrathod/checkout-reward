@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service.js';
-import type { OrderDto, OrderItemDto } from './dto/order.dto.js';
+import type { OrderItemDto } from './dto/order.dto.js';
 
 export interface OrderRow {
   id: string;
@@ -20,6 +20,18 @@ export interface OrderItemRow {
   unit_price_cents: number;
   quantity: number;
   line_total_cents: number;
+}
+
+export interface RevenueTotals {
+  gross_cents: number;
+  discount_cents: number;
+  net_cents: number;
+}
+
+export interface ProductQuantityRow {
+  product_id: string;
+  product_name: string;
+  quantity_sold: number;
 }
 
 @Injectable()
@@ -71,5 +83,27 @@ export class OrdersRepository {
         n: number;
       }
     ).n;
+  }
+
+  revenueTotals(): RevenueTotals {
+    return this.db.connection
+      .prepare(
+        `SELECT COALESCE(SUM(subtotal_cents), 0) AS gross_cents,
+                COALESCE(SUM(discount_cents), 0) AS discount_cents,
+                COALESCE(SUM(total_cents), 0) AS net_cents
+           FROM orders`,
+      )
+      .get() as RevenueTotals;
+  }
+
+  quantityByProduct(): ProductQuantityRow[] {
+    return this.db.connection
+      .prepare(
+        `SELECT product_id, product_name, SUM(quantity) AS quantity_sold
+           FROM order_items
+          GROUP BY product_id, product_name
+          ORDER BY product_id`,
+      )
+      .all() as ProductQuantityRow[];
   }
 }

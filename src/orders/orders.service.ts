@@ -10,6 +10,7 @@ import { ProductsRepository } from '../products/products.repository.js';
 import type { OrderDto, OrderItemDto } from './dto/order.dto.js';
 import { OrdersRepository, OrderRow } from './orders.repository.js';
 import { discountCents } from '../common/utils/money.js';
+import { isUniqueViolation } from '../common/utils/sqlite.js';
 
 export interface CheckoutResult {
   order: OrderDto;
@@ -202,12 +203,4 @@ export class OrdersService {
       created_at: row.created_at,
     };
   }
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    'code' in error &&
-    (error as { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE'
-  );
 }
