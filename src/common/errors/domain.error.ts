@@ -1,8 +1,9 @@
 import { HttpStatus } from '@nestjs/common';
+import type { ErrorCode } from './error-codes.js';
 
 export class DomainError extends Error {
   constructor(
-    readonly code: string,
+    readonly code: ErrorCode,
     readonly status: number,
     message: string,
     readonly details?: Record<string, unknown>,
@@ -12,31 +13,31 @@ export class DomainError extends Error {
   }
 
   static badRequest(
-    code: string,
+    code: ErrorCode,
     message: string,
     details?: Record<string, unknown>,
   ) {
-    return new DomainError(code, HttpStatus.CONFLICT, message, details);
+    return new DomainError(code, HttpStatus.BAD_REQUEST, message, details); // 400
   }
 
   static notFound(
-    code: string,
+    code: ErrorCode,
     message: string,
     details?: Record<string, unknown>,
   ) {
-    return new DomainError(code, HttpStatus.NOT_FOUND, message, details);
+    return new DomainError(code, HttpStatus.NOT_FOUND, message, details); // 404
   }
 
   static conflict(
-    code: string,
+    code: ErrorCode,
     message: string,
     details?: Record<string, unknown>,
   ) {
-    return new DomainError(code, HttpStatus.CONFLICT, message, details);
+    return new DomainError(code, HttpStatus.CONFLICT, message, details); // 409
   }
 
   static invalid(
-    code: string,
+    code: ErrorCode,
     message: string,
     details?: Record<string, unknown>,
   ) {
