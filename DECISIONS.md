@@ -65,6 +65,21 @@ before real schema evolution.
 at m*n orders): nothing gets skipped even if generation is requested late;
 UNIQUE(milestone) settles concurrent generation.
 
+# Decision: Idempotency on Failed Checkouts => I added this at last before submission of assignment
+
+**Context:** If a checkout fails (e.g., empty cart, out of stock), the transaction rolls back. No order is saved. If the client retries with the same Idempotency-Key, the system re-evaluates everything and hits the database again. A buggy client could hammer the API forever.
+
+**Options considered:**
+1. Persist failed attempts in a database table.
+2. Do nothing (let clients retry indefinitely).
+3. Cache failures in-memory for a short TTL.
+
+**Choice:** Cache failures in-memory for 5 minutes.
+
+**Why:** A database table adds write load and requires cleanup jobs for transient data. Doing nothing leaves the API vulnerable to retry storms. An in-memory cache (Map) is instant, prevents DB load, and fits the single-node timebox perfectly.
+
+**Consequences:** If the application restarts, the cache is cleared (acceptable). Clients who fix a cart issue must generate a NEW Idempotency-Key to retry, which matches standard payment gateway behavior (like Stripe).
+
 ## Money
 
 Integer cents everywhere, no floats near money. Discount is
