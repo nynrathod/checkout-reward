@@ -484,6 +484,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nestjs/config@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "@nestjs/config@npm:12.0.0"
+  dependencies:
+    "@standard-schema/spec": "npm:1.1.0"
+    dotenv: "npm:17.4.2"
+    dotenv-expand: "npm:13.0.0"
+    es-toolkit: "npm:1.51.0"
+  peerDependencies:
+    "@nestjs/common": ^11.0.0 || ^12.0.0
+    rxjs: ^7.1.0
+  checksum: 10c0/d6241185a7a43a8eda2daae346f06aca497b53a5a5ffeea5449040a1469c3fa56867a722164b1cb290f747fb4c5c40a6650abe15f28a25098963318c01c37381
+  languageName: node
+  linkType: hard
+
 "@nestjs/core@npm:^12.0.1":
   version: 12.0.1
   resolution: "@nestjs/core@npm:12.0.1"
@@ -878,6 +893,15 @@ __metadata:
   version: 0.3.0
   resolution: "@tokenizer/token@npm:0.3.0"
   checksum: 10c0/7ab9a822d4b5ff3f5bca7f7d14d46bdd8432528e028db4a52be7fbf90c7f495cc1af1324691dda2813c6af8dc4b8eb29de3107d4508165f9aa5b53e7d501f155
+  languageName: node
+  linkType: hard
+
+"@types/better-sqlite3@npm:^9.6.0":
+  version: 9.6.0
+  resolution: "@types/better-sqlite3@npm:9.6.0"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/630273028a281addb0df36d204d0edcd0ab000f55ed89fdc742536a6ead4d4404287ebfb1714f5c58ec2f08fd508baf810e1d8f093ff9d480b9f3fb6495d141a
   languageName: node
   linkType: hard
 
@@ -1303,6 +1327,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"better-sqlite3@npm:^13.0.3":
+  version: 13.0.3
+  resolution: "better-sqlite3@npm:13.0.3"
+  dependencies:
+    node-addon-api: "npm:^8.0.0"
+    node-gyp: "npm:latest"
+  checksum: 10c0/3daaad4fbd39b3ebddd9840c1aab0a7ccc94a01054fb03f6660ec2c226422b5daf3eb8e55a14103eddb84c2cd16f8e70ae9d41f0e2892b58c8c6152ee7ff09c0
+  languageName: node
+  linkType: hard
+
 "bl@npm:^4.1.0":
   version: 4.1.0
   resolution: "bl@npm:4.1.0"
@@ -1444,15 +1478,18 @@ __metadata:
   dependencies:
     "@nestjs/cli": "npm:^12.0.0"
     "@nestjs/common": "npm:^12.0.1"
+    "@nestjs/config": "npm:^12.0.0"
     "@nestjs/core": "npm:^12.0.1"
     "@nestjs/mau": "npm:^0.2.6"
     "@nestjs/platform-express": "npm:^12.0.1"
     "@nestjs/schematics": "npm:^12.0.0"
     "@nestjs/testing": "npm:^12.0.1"
+    "@types/better-sqlite3": "npm:^9.6.0"
     "@types/express": "npm:^5.0.0"
     "@types/node": "npm:^24.0.0"
     "@types/supertest": "npm:^7.0.0"
     "@vitest/coverage-v8": "npm:^4.1.2"
+    better-sqlite3: "npm:^13.0.3"
     oxlint: "npm:^1.58.0"
     prettier: "npm:^3.4.2"
     reflect-metadata: "npm:^0.2.2"
@@ -1735,6 +1772,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv-expand@npm:13.0.0":
+  version: 13.0.0
+  resolution: "dotenv-expand@npm:13.0.0"
+  dependencies:
+    dotenv: "npm:^17.4.2"
+  checksum: 10c0/debebb7807fedebb21078dc661d28d69d373f3a673165afea7f7a8c3b82f0da675e417b2d42c40b1f3d357741c8b24a77d6f4376886092a82456225b3d241b88
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:17.4.2, dotenv@npm:^17.4.2":
+  version: 17.4.2
+  resolution: "dotenv@npm:17.4.2"
+  checksum: 10c0/164f8e77a646c8446867d5b588d26ea6005c8ea7c5eb41cf926f6113d23f2191355f6e0cfd95ea9bab98394a5b0a3f1e51a8399711b666fe55cc7b0bd745f942
+  languageName: node
+  linkType: hard
+
 "dunder-proto@npm:^1.0.1":
   version: 1.0.1
   resolution: "dunder-proto@npm:1.0.1"
@@ -1820,6 +1873,20 @@ __metadata:
     has-tostringtag: "npm:^1.0.2"
     hasown: "npm:^2.0.2"
   checksum: 10c0/ef2ca9ce49afe3931cb32e35da4dcb6d86ab02592cfc2ce3e49ced199d9d0bb5085fc7e73e06312213765f5efa47cc1df553a6a5154584b21448e9fb8355b1af
+  languageName: node
+  linkType: hard
+
+"es-toolkit@npm:1.51.0":
+  version: 1.51.0
+  resolution: "es-toolkit@npm:1.51.0"
+  dependenciesMeta:
+    "@trivago/prettier-plugin-sort-imports@4.3.0":
+      unplugged: true
+    prettier-plugin-sort-re-exports@0.0.1:
+      unplugged: true
+    vitepress-plugin-sandpack@1.1.4:
+      unplugged: true
+  checksum: 10c0/ad519228a317a27b11144b582c1168c552143dd58ce4e62be50c185de48c69dea996f6ad6ebc518129ebd58c34da150c1a2134d4a3d7cdc75120c626e57ce7c4
   languageName: node
   linkType: hard
 
@@ -2737,6 +2804,15 @@ __metadata:
   dependencies:
     content-type: "npm:^2.1.0"
   checksum: 10c0/656fa57de02f1a0c4c09f9e17eb78e8182547c07093e810ff8f16249b6ae31f2c546a3d457905e94f3276b25f0e2741ea1a3bc3912192932ed7e493adfea535e
+  languageName: node
+  linkType: hard
+
+"node-addon-api@npm:^8.0.0":
+  version: 8.9.2
+  resolution: "node-addon-api@npm:8.9.2"
+  dependencies:
+    node-gyp: "npm:latest"
+  checksum: 10c0/5cf5231e0da22b22862e6b593982a0e390ca89d022a9ac666c83deceecf20378cb8afe47c456ac1a58a9f62ef60099c950aec05814a287fdfd751d9d154fb12d
   languageName: node
   linkType: hard
 
