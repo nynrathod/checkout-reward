@@ -61,6 +61,8 @@ export class CouponsRepository {
       .get() as { generated: number; available: number; redeemed: number };
   }
 
+  // Atomic claim. WHERE redeemed_at IS NULL means only one checkout can win.
+  // Returns 1 if we won, 0 if we lost. The caller rolls back on 0.
   redeem(code: string, redeemedAt: string): number {
     return this.db.connection
       .prepare(

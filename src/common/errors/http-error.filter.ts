@@ -10,8 +10,7 @@ import type { Response } from 'express';
 import { DomainError } from './domain.error.js';
 import { ErrorCodes } from './error-codes.js';
 
-// Every error leaves the API in one envelope:
-//   { error: { code, message, details? } }
+// One error shape for everything. Clients switch on 'code', they don't parse messages.
 @Catch()
 export class HttpErrorFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpErrorFilter.name);
@@ -19,6 +18,7 @@ export class HttpErrorFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();
 
+    // Our expected errors.
     if (exception instanceof DomainError) {
       return response.status(exception.status).json({
         error: {
@@ -29,8 +29,8 @@ export class HttpErrorFilter implements ExceptionFilter {
       });
     }
 
+    // Validation errors. Normalize them into our envelope.
     if (exception instanceof HttpException) {
-      // ValidationPipe rejections land here; normalize them into the envelope.
       const payload = exception.getResponse() as string | { message?: unknown };
       const raw = typeof payload === 'string' ? payload : payload.message;
       const message = Array.isArray(raw)
@@ -41,6 +41,7 @@ export class HttpErrorFilter implements ExceptionFilter {
       });
     }
 
+    // Unexpected error. Log it for us, give the client a generic message.
     this.logger.error(
       exception instanceof Error ? exception.stack : String(exception),
     );

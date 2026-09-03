@@ -25,9 +25,12 @@ export class AdminService {
     const percentOff = this.config.get('couponPercentOff', { infer: true });
 
     try {
+      // Check the milestone, then insert. The DB constraint stops duplicates.
       const coupon = this.db.transaction(() => {
         const ordersPlaced = this.orders.count();
         const milestone = this.coupons.maxMilestone() + 1;
+
+        // Not enough orders yet? Walk away.
         if (ordersPlaced < milestone * n) {
           throw DomainError.conflict(
             ErrorCodes.NO_ELIGIBLE_MILESTONE,
@@ -57,10 +60,8 @@ export class AdminService {
       });
       return { ...coupon, status: 'available' as const };
     } catch (error) {
+      // Two admins hit generate at once. The DB blocked the loser. Tell them nicely.
       if (isUniqueViolation(error)) {
-        // Two generation requests raced past the pre-check; UNIQUE(milestone)
-        // let exactly one win. The milestone just rewarded is now the highest
-        // in the table.
         const milestone = this.coupons.maxMilestone();
         const winner = this.coupons.findByMilestone(milestone);
         if (winner) {
@@ -75,8 +76,7 @@ export class AdminService {
     }
   }
 
-  // Read-only: every query on this path is a SELECT, so repeated requests
-  // can never mutate state.
+  // Read-only. Hit it a thousand times, state never changes.
   report(): ReportDto {
     return {
       orders_placed: this.orders.count(),

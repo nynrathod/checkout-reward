@@ -15,8 +15,7 @@ function envInt(name: string, fallback: number): number {
   return value;
 }
 
-// Loaded once at boot. Invalid configuration should crash the process,
-// not surface as per-request failures.
+// Loaded once at boot. Bad config should crash the app immediately, not fail later.
 export function loadConfig(): AppConfig {
   const couponMilestoneN = envInt('COUPON_MILESTONE_N', 5);
   const couponPercentOff = envInt('COUPON_PERCENT_OFF', 10);

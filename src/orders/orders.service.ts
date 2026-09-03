@@ -32,6 +32,7 @@ export class OrdersService {
     idempotencyKey: string | undefined,
     couponCode?: string,
   ): CheckoutResult {
+    // No key? No checkout. We refuse to guess if a retry is a duplicate.
     if (!idempotencyKey) {
       throw DomainError.badRequest(
         ErrorCodes.IDEMPOTENCY_KEY_REQUIRED,
@@ -39,12 +40,14 @@ export class OrdersService {
       );
     }
 
+    // Already saw this request? Just return the original order. No double-charging.
     const existing = this.orders.findByKey(idempotencyKey);
     if (existing) {
       this.assertSameKeyRequest(existing, cartId, couponCode);
       return { order: this.toDto(existing), replayed: true };
     }
 
+    // Basic checks before we open a transaction. Fail fast.
     const cart = this.carts.findCart(cartId);
     if (!cart) {
       throw DomainError.notFound(
@@ -69,11 +72,14 @@ export class OrdersService {
     }
 
     try {
+      // One transaction for everything. If anything fails, it all rolls back.
       const order = this.db.transaction(() =>
         this.placeOrder(cartId, idempotencyKey, couponCode),
       );
       return { order, replayed: false };
     } catch (error) {
+      // Race condition: two requests hit the DB at the exact same time.
+      // The winner stays, the loser acts like a retry.
       if (isUniqueViolation(error)) {
         const winner = this.orders.findByKey(idempotencyKey);
         if (winner) {
@@ -101,6 +107,7 @@ export class OrdersService {
     idempotencyKey: string,
     couponCode?: string,
   ): OrderDto {
+    // Claim the cart. If 0 rows changed, someone else already checked it out.
     if (this.carts.markCheckedOut(cartId) === 0) {
       throw DomainError.conflict(
         ErrorCodes.CART_NOT_OPEN,
@@ -119,6 +126,7 @@ export class OrdersService {
     const items: OrderItemDto[] = [];
     let subtotal = 0;
     for (const line of lines) {
+      // Atomic inventory grab. If 0 rows changed, we're out of stock. No overselling.
       if (
         this.products.decrementInventory(line.product_id, line.quantity) === 0
       ) {
@@ -130,6 +138,7 @@ export class OrdersService {
           { product_id: line.product_id, requested: line.quantity, available },
         );
       }
+      // Cents only. No floats.
       const lineTotal = line.price_cents * line.quantity;
       subtotal += lineTotal;
       items.push({
@@ -144,6 +153,7 @@ export class OrdersService {
     let discount = 0;
     let usedCoupon: string | null = null;
     if (couponCode) {
+      // Atomic coupon claim. If 0 rows changed, someone took it. Roll back.
       const redeemed = this.coupons.redeem(couponCode, nowIso());
       if (redeemed === 0) {
         throw DomainError.conflict(
@@ -166,6 +176,7 @@ export class OrdersService {
       total_cents: subtotal - discount,
       created_at: nowIso(),
     };
+    // Save the snapshot. Products might change later, but this receipt stays the same.
     this.orders.insert(
       row,
       items.map((i) => ({ ...i, order_id: row.id })),
@@ -173,6 +184,7 @@ export class OrdersService {
     return this.toDto(row, items);
   }
 
+  // Same key but different request body? That's a client bug. Refuse it.
   private assertSameKeyRequest(
     order: OrderRow,
     cartId: string,

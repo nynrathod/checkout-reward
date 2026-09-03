@@ -30,6 +30,7 @@ export class CartsRepository {
       .get(id) as CartRow | undefined;
   }
 
+  // Adding same product twice? Bump the quantity, don't duplicate the row.
   upsertItem(cartId: string, productId: string, quantity: number): void {
     this.db.connection
       .prepare(
@@ -74,6 +75,7 @@ export class CartsRepository {
       .all(cartId) as CartLineRow[];
   }
 
+  // One-checkout guard. If status isn't 'open', we touch 0 rows.
   markCheckedOut(cartId: string): number {
     return this.db.connection
       .prepare(

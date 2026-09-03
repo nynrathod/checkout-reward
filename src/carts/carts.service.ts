@@ -27,6 +27,7 @@ export class CartsService {
   addItem(cartId: string, dto: AddCartItemDto): CartViewDto {
     const cart = this.requireOpenCart(cartId);
     const product = this.products.get(dto.product_id);
+    // Check combined total. Adding 2 to a cart with 3 (when only 4 exist) should fail.
     const current = this.carts.findItemQuantity(cart.id, product.id) ?? 0;
     this.requireInventory(
       product.id,
@@ -89,6 +90,7 @@ export class CartsService {
     available: number,
     requested: number,
   ): void {
+    // Best-effort check at add-time. Checkout does the real atomic check later.
     if (requested > available) {
       throw DomainError.conflict(
         ErrorCodes.INSUFFICIENT_INVENTORY,
@@ -98,6 +100,8 @@ export class CartsService {
     }
   }
 
+  // Prices are live. If an admin changes a price, the cart updates immediately.
+  // Snapshots only happen at checkout.
   private viewOf(cart: CartRow): CartViewDto {
     const items = this.carts.findLines(cart.id).map((l) => ({
       product_id: l.product_id,

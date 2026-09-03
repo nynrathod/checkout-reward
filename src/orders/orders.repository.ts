@@ -59,6 +59,7 @@ export class OrdersRepository {
       .all(orderId) as OrderItemDto[];
   }
 
+  // Insert order and items together. If an item fails, the order rolls back too.
   insert(order: OrderRow, items: OrderItemRow[]): void {
     const insertOrder = this.db.connection.prepare(
       `INSERT INTO orders (id, idempotency_key, cart_id, coupon_code,
@@ -85,6 +86,7 @@ export class OrdersRepository {
     ).n;
   }
 
+  // gross - discount = net. Straight from the DB.
   revenueTotals(): RevenueTotals {
     return this.db.connection
       .prepare(
@@ -96,6 +98,7 @@ export class OrdersRepository {
       .get() as RevenueTotals;
   }
 
+  // Pulled from snapshots, not products. Deleted products still show up in history.
   quantityByProduct(): ProductQuantityRow[] {
     return this.db.connection
       .prepare(

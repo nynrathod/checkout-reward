@@ -2,6 +2,7 @@ export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS products (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,
+  -- Trust no one. The DB physically blocks negative prices and inventory.
   price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
   inventory   INTEGER NOT NULL CHECK (inventory >= 0)
 );
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
 
 CREATE TABLE IF NOT EXISTS orders (
   id              TEXT PRIMARY KEY,
+  -- Stops duplicate orders when two identical retries hit at once.
   idempotency_key TEXT NOT NULL UNIQUE,
   cart_id         TEXT NOT NULL REFERENCES carts(id),
   coupon_code     TEXT,
@@ -29,8 +31,7 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at      TEXT NOT NULL
 );
 
--- Snapshot of what was purchased: product data may change after the order,
--- these rows must not. This is the "order explains itself" invariant.
+-- Frozen snapshot. Product data will change, but an order must explain itself forever.
 CREATE TABLE IF NOT EXISTS order_items (
   order_id         TEXT NOT NULL REFERENCES orders(id),
   product_id       TEXT NOT NULL,
@@ -47,8 +48,7 @@ CREATE TABLE IF NOT EXISTS coupons (
   milestone    INTEGER NOT NULL,
   redeemed_at  TEXT,
   generated_at TEXT NOT NULL,
-  -- One coupon per milestone, enforced at the storage layer: concurrent
-  -- generation requests for the same milestone cannot both succeed.
+  -- One coupon per milestone. If two admins race, the DB blocks the loser.
   UNIQUE (milestone)
 );
 `;
@@ -81,7 +81,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     inventory: 12,
   },
   { id: 'p_cable', name: 'USB-C Cable 2m', priceCents: 1299, inventory: 200 },
-  // Deliberately scarce: the oversell tests race against this product.
+  // Scarce on purpose. Tests fire 8 checkouts at this to prove we never oversell.
   {
     id: 'p_deskmat',
     name: 'Limited Edition Desk Mat',

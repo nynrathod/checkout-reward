@@ -1,3 +1,4 @@
+// Machine-readable codes. Clients switch on these instead of parsing English.
 export const ErrorCodes = {
   // Generic
   VALIDATION_FAILED: 'VALIDATION_FAILED',

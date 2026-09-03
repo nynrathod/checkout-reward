@@ -16,6 +16,7 @@ import { OrdersService } from './orders.service.js';
 export class OrdersController {
   constructor(private readonly orders: OrdersService) {}
 
+  // 201 = fresh order. 200 = replay. The header tells the client they already did this.
   @Post('carts/:cartId/checkout')
   checkout(
     @Param('cartId') cartId: string,

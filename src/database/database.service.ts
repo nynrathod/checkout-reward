@@ -18,6 +18,8 @@ export class DatabaseService implements OnModuleInit {
       mkdirSync(dirname(path), { recursive: true });
     }
     this.db = new Database(path);
+    // WAL lets readers and writers work at the same time.
+    // busy_timeout makes SQLite wait 5s instead of crashing on a locked DB.
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('busy_timeout = 5000');
@@ -26,6 +28,7 @@ export class DatabaseService implements OnModuleInit {
   }
 
   private seed(): void {
+    // INSERT OR IGNORE means re-running the app won't duplicate seed data.
     const stmt = this.db.prepare(
       'INSERT OR IGNORE INTO products (id, name, price_cents, inventory) VALUES (@id, @name, @priceCents, @inventory)',
     );
@@ -36,11 +39,8 @@ export class DatabaseService implements OnModuleInit {
     return this.db;
   }
 
-  // Runs `fn` as one atomic unit: any throw rolls everything back.
-  // better-sqlite3 is synchronous on a single connection, so nothing can
-  // interleave with `fn` inside this process. The SQL-level guards
-  // (conditional updates, unique constraints) remain the real invariant
-  // enforcers for the multi-instance case.
+  // Runs everything as one unit. If it throws, it rolls back.
+  // better-sqlite3 is synchronous, so nothing interrupts it inside this process.
   transaction<T>(fn: () => T): T {
     return this.db.transaction(fn)();
   }

@@ -22,6 +22,8 @@ export class ProductsRepository {
       .get(id) as ProductRow | undefined;
   }
 
+  // Oversell guard. The WHERE clause stops inventory going negative.
+  // If two users race for the last item, only one UPDATE works.
   decrementInventory(productId: string, quantity: number): number {
     return this.db.connection
       .prepare(
