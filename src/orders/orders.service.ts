@@ -11,6 +11,7 @@ import type { OrderDto, OrderItemDto } from './dto/order.dto.js';
 import { OrdersRepository, OrderRow } from './orders.repository.js';
 import { discountCents } from '../common/utils/money.js';
 import { isUniqueViolation } from '../common/utils/sqlite.js';
+import { IdempotencyCache } from './idempotency.cache.js';
 
 export interface CheckoutResult {
   order: OrderDto;
@@ -25,6 +26,7 @@ export class OrdersService {
     private readonly coupons: CouponsRepository,
     private readonly orders: OrdersRepository,
     private readonly db: DatabaseService,
+    private readonly idempotencyCache: IdempotencyCache,
   ) {}
 
   checkout(
@@ -32,7 +34,7 @@ export class OrdersService {
     idempotencyKey: string | undefined,
     couponCode?: string,
   ): CheckoutResult {
-    // No key? No checkout. We refuse to guess if a retry is a duplicate.
+    // No key? No checkout.
     if (!idempotencyKey) {
       throw DomainError.badRequest(
         ErrorCodes.IDEMPOTENCY_KEY_REQUIRED,
@@ -40,11 +42,23 @@ export class OrdersService {
       );
     }
 
-    // Already saw this request? Just return the original order. No double-charging.
+    // Did we already see this request succeed? Return the original order.
     const existing = this.orders.findByKey(idempotencyKey);
     if (existing) {
       this.assertSameKeyRequest(existing, cartId, couponCode);
       return { order: this.toDto(existing), replayed: true };
+    }
+
+    // Did we see this request fail recently? Fail fast, don't touch the DB.
+    // Client must use a NEW key if they want to try again after fixing the cart.
+    const cachedFailure = this.idempotencyCache.getFailed(idempotencyKey);
+    if (cachedFailure) {
+      throw new DomainError(
+        cachedFailure.code,
+        cachedFailure.status,
+        cachedFailure.message,
+        cachedFailure.details,
+      );
     }
 
     // Basic checks before we open a transaction. Fail fast.
@@ -86,6 +100,12 @@ export class OrdersService {
           this.assertSameKeyRequest(winner, cartId, couponCode);
           return { order: this.toDto(winner), replayed: true };
         }
+      }
+
+      // It's a real failure (inventory, empty cart, bad coupon). Cache it.
+      // This stops the client from spamming retries on permanent failures.
+      if (error instanceof DomainError) {
+        this.idempotencyCache.setFailed(idempotencyKey, error);
       }
       throw error;
     }
