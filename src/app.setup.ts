@@ -11,4 +11,5 @@ export function configureApp(app: INestApplication): void {
     }),
   );
   app.useGlobalFilters(new HttpErrorFilter());
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
 }
