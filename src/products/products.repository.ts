@@ -21,4 +21,12 @@ export class ProductsRepository {
       )
       .get(id) as ProductRow | undefined;
   }
+
+  decrementInventory(productId: string, quantity: number): number {
+    return this.db.connection
+      .prepare(
+        'UPDATE products SET inventory = inventory - ? WHERE id = ? AND inventory >= ?',
+      )
+      .run(quantity, productId, quantity).changes;
+  }
 }
